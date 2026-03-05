@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manga Sport Quizz</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f0f0;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; margin: 0;
+        }
+        #quiz-container {
+            background: white; border: 4px solid #000;
+            padding: 20px; width: 90%; max-width: 500px;
+            box-shadow: 10px 10px 0px #000; border-radius: 12px;
+            text-align: center;
+        }
+        .stats {
+            display: flex; justify-content: space-between;
+            font-weight: bold; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;
+        }
+        #timer {
+            color: red; font-size: 1.5rem; background: #ffebeb;
+            padding: 5px 15px; border-radius: 20px; border: 2px solid red;
+        }
+        .difficulty {
+            padding: 5px 10px; color: white; border-radius: 5px; text-transform: uppercase; font-size: 0.8rem;
+        }
+        .option-btn {
+            display: block; width: 100%; margin: 10px 0; padding: 15px;
+            font-size: 1rem; font-weight: bold; cursor: pointer;
+            border: 2px solid #000; background: #fff; border-radius: 8px;
+            transition: 0.2s;
+        }
+        .option-btn:hover { background: #e0f0ff; transform: scale(1.02); }
+        .hidden { display: none; }
+        img { width: 100%; max-width: 300px; border-radius: 10px; margin-top: 20px; border: 3px solid #000; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <div id="game-screen">
+        <div class="stats">
+            <div id="diff-badge" class="difficulty">Niveau</div>
+            <div id="timer">15</div>
+            <div>Score: <span id="score-val">0</span></div>
+        </div>
+        <h2 id="question-text">Question...</h2>
+        <div id="options-box"></div>
+        <p>Question <span id="current-num">1</span>/10</p>
+    </div>
+
+    <div id="result-screen" class="hidden">
+        <h1>MATCH TERMINÉ ! 🏆</h1>
+        <p style="font-size: 1.5rem;">Score Total : <strong id="final-score">0</strong> points</p>
+        <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3Y2ZHF5NmR3Z2t4eXF4eG54eG54eG54eG54eG54eG54eG54JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/129O78h4Y4W1S8/giphy.gif" alt="Win">
+        <br><br>
+        <button onclick="location.reload()" class="option-btn" style="background: #000; color: #fff;">RECOMMENCER</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "Dans quel sport s'illustre Olivier Atton ?", options: ["Basket", "Football", "Tennis", "Rugby"], r: 1, d: 1 },
+        { q: "Quel est le sport dans 'Haikyu !!' ?", options: ["Natation", "Judo", "Volley-ball", "Ping-pong"], r: 2, d: 1 },
+        { q: "Que cherchent à devenir les joueurs dans 'Blue Lock' ?", options: ["Gardien", "Attaquant", "Arbitre", "Coach"], r: 1, d: 1 },
+        { q: "Quel est le sport de 'Slam Dunk' ?", options: ["Basket", "Tennis", "Volley", "Foot"], r: 0, d: 1 },
+        { q: "Le héros de 'Prince du Tennis' s'appelle ?", options: ["Ryoma Echizen", "Son Goku", "Luffy", "Naruto"], r: 0, d: 1 },
+        { q: "Sport pratiqué dans 'Eyeshield 21' ?", options: ["Baseball", "Hockey", "Foot US", "Lacrosse"], r: 2, d: 3 },
+        { q: "Handicap du héros dans 'Real' ?", options: ["Sourd", "Fauteuil roulant", "Aveugle", "Muet"], r: 1, d: 3 },
+        { q: "Magazine qui coédite En selle Sakamichi?", options: ["L'Equipe", "Okapi", "Astrapi", "Picsou"], r: 0, d: 4 },
+        { q: "Nom du club dans 'Ao Ashi' ?", options: ["Tokyo Esperion", "Nankatsu", "Inazuma", "ETU"], r: 0, d: 4 },
+        { q: "Année des JO de Tokyo ?", options: ["1987", "1964", "2024", "1946"], r: 1, d: 5 }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let timer;
+    let seconds = 15;
+    const colors = ["", "#4CAF50", "#8BC34A", "#FFC107", "#FF9800", "#F44336"];
+
+    function startTimer() {
+        seconds = 15;
+        document.getElementById('timer').innerText = seconds;
+        clearInterval(timer);
+        timer = setInterval(() => {
+            seconds--;
+            document.getElementById('timer').innerText = seconds;
+            if(seconds <= 0) { nextQuestion(false); }
+        }, 1000);
+    }
+
+    function loadQuestion() {
+        if(current >= questions.length) {
+            showResult();
+            return;
+        }
+        
+        const q = questions[current];
+        document.getElementById('question-text').innerText = q.q;
+        document.getElementById('current-num').innerText = current + 1;
+        
+        const badge = document.getElementById('diff-badge');
+        badge.innerText = "Niveau " + q.d;
+        badge.style.backgroundColor = colors[q.d];
+
+        const box = document.getElementById('options-box');
+        box.innerHTML = '';
+        q.options.forEach((opt, i) => {
+            const b = document.createElement('button');
+            b.className = 'option-btn';
+            b.innerText = opt;
+            b.onclick = () => check(i);
+            box.appendChild(b);
+        });
+        startTimer();
+    }
+
+    function check(index) {
+        const q = questions[current];
+        if(index === q.r) {
+            // Calcul : (Difficulté x 10) + (Secondes restantes x 5)
+            score += (q.d * 10) + (seconds * 5);
+            document.getElementById('score-val').innerText = score;
+        }
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        current++;
+        loadQuestion();
+    }
+
+    function showResult() {
+        clearInterval(timer);
+        document.getElementById('game-screen').className = 'hidden';
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('final-score').innerText = score;
+    }
+
+    // Lancement immédiat
+    window.onload = loadQuestion;
+</script>
+</body>
+</html>
